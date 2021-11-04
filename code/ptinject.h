@@ -14,6 +14,7 @@
 #include <asm/ptrace.h>
 #include <sys/user.h>
 #include <sys/uio.h>
+#include <sys/wait.h>
 
 // ======================================================================== //
 // arch specific defines

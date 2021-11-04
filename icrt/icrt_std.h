@@ -207,7 +207,7 @@ int fmt_num(char * buf, size_t len, unsigned long val, int base)
 // ugly AF but i dont want to include snprintf which has tons of globals / code / etc.
 // only supports %x %d %s
 // some modifiers are accepted but arent taken into account
-void printf(char * str, ...)
+int printf(const char * str, ...)
 {
     char tmp[32];
     char *  s = str;
@@ -269,7 +269,7 @@ void printf(char * str, ...)
 
 exit:
     va_end(args);
-    return;
+    return 0;
 }
 
 #endif
