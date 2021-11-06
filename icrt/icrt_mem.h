@@ -15,7 +15,7 @@
 #define IXTY_SIZE_HDR           (2 * sizeof(unsigned long))
 
 // this realloc will use the current mapped page if it is big enough
-void * realloc(void * addr, size_t size)
+void * _realloc(void * addr, size_t size)
 {
     size_t alloc_size;
     unsigned long mem;
@@ -47,19 +47,19 @@ void * realloc(void * addr, size_t size)
     if(addr && IXTY_SIZE_USER(addr))
         memcpy((void*)mem, addr, IXTY_SIZE_USER(addr));
     if(addr)
-        free(addr);
+        _free(addr);
 
     return (void*)mem;
 }
 
 // wrapper around realloc
-void * malloc(size_t len)
+void * _malloc(size_t len)
 {
-    return realloc(NULL, len);
+    return _realloc(NULL, len);
 }
 
 // free mmapped page
-void free(void * ptr)
+void _free(void * ptr)
 {
     char * page = (char *)(ptr) - IXTY_SIZE_HDR;
 

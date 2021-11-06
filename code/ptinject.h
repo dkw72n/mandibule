@@ -172,7 +172,7 @@ int pt_inject(pid_t pid, uint8_t * sc_buf, size_t sc_len, size_t start_offset)
     memcpy(&regs_backup, &regs, sizeof(struct REG_TYPE));
 
     // backup memory
-    if(!(mem_backup = malloc(sc_len + sizeof(long))))
+    if(!(mem_backup = _malloc(sc_len + sizeof(long))))
         _pt_fail("> malloc failed to allocate memory for remote mem backup\n");
 
     if(_pt_read(pid, (void*)rvm_a, mem_backup, sc_len) < 0)

@@ -56,7 +56,7 @@ int read_file(char * path, uint8_t ** out_buf, size_t * out_len)
     *out_len = fs;
 
     // allocate mem
-    if((*out_buf = realloc(0, fs)) == NULL)
+    if((*out_buf = _realloc(0, fs)) == NULL)
         goto exit;
 
     // read file
@@ -75,7 +75,7 @@ int read_file(char * path, uint8_t ** out_buf, size_t * out_len)
 exit:
     if(*out_buf)
     {
-        free(*out_buf);
+        _free(*out_buf);
         *out_buf = 0;
     }
     _close(fd);
@@ -135,11 +135,11 @@ int get_section(int pid, char * filter, unsigned long * sec_start, size_t * sec_
     } while(*sec_size < min_len);
 
 
-    free(maps_buf);
+    _free(maps_buf);
     return 0;
 
 fail:
-    free(maps_buf);
+    _free(maps_buf);
     return -1;
 }
 
@@ -172,12 +172,12 @@ unsigned long get_mapmax(int pid)
 
         while(t > 0xff)
             t >>= 8;
-        if(t != 0xff && t != 0x7f)
+        if(t < 0x7f)
             max = e;
 
         p = endline + 1;
     }
-    free(maps_buf);
+    _free(maps_buf);
     printf("> auto-detected manual mapping address 0x%lx\n", MAPS_ADDR_ALIGN(max));
     return MAPS_ADDR_ALIGN(max);
 }

@@ -82,7 +82,7 @@ void _main(unsigned long * sp)
     size_t          inj_size    = mandibule_end() - (unsigned long)inj_addr;
     size_t          inj_off     = (size_t)payload_start - (size_t)inj_addr;
     size_t          inj_opts    = mandibule_beg(0) - mandibule_beg(1);
-    uint8_t *       inj_code    = malloc(inj_size);
+    uint8_t *       inj_code    = _malloc(inj_size);
 
     // parse arguments & build shared arguments struct
     args = _ashared_parse(ac, av);
@@ -140,13 +140,13 @@ void payload_loadelf(ashared_t * args)
     printf("> auxv len: %d\n", auxv_len);
 
     // build argv from args
-    av = malloc((args->count_arg + 1) * sizeof(char*));
+    av = _malloc((args->count_arg + 1) * sizeof(char*));
     memset(av, 0, (args->count_arg + 1) * sizeof(char*));
     for(int i=0; i<args->count_arg; i++)
         av[i] = _ashared_get(args, i, 1);
 
     // build envp from args
-    env = malloc((args->count_env + 1) * sizeof(char*));
+    env = _malloc((args->count_env + 1) * sizeof(char*));
     for(int i=0; i<args->count_env; i++)
         env[i] = _ashared_get(args, i, 0);
 
@@ -168,9 +168,9 @@ void payload_loadelf(ashared_t * args)
 
     // never reached if everything goes well
     printf("> returned from loader\n");
-    free(auxv_buf);
-    free(av);
-    free(env);
+    _free(auxv_buf);
+    _free(av);
+    _free(env);
     _exit(1);
 }
 

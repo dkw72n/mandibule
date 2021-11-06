@@ -35,7 +35,7 @@ typedef struct ashared_s
 // allocates memory & prepares structure
 ashared_t * _ashared_new(size_t size)
 {
-    ashared_t * a = (ashared_t *)malloc(size);
+    ashared_t * a = (ashared_t *)_malloc(size);
     if(!a)
         return NULL;
 
