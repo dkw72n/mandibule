@@ -49,7 +49,7 @@ static inline uint8_t * fake_stack(uint8_t * sp, int ac, char ** av, char ** env
     uint8_t *   arg_ptrs[256];
     int         env_max = 0;
     uint8_t*    sp_max = sp;
-
+    int         tried = 0;
     if (ac >= 256) return (uint8_t*)0xdeadbeef;
     // align stack
     FSTACK_PUSH_STR(sp, "");
@@ -90,8 +90,10 @@ try_again:
     // argc
     FSTACK_PUSH_LONG(sp, ac);
     
-    if ((uintptr_t)sp % 16){
+    if ((uintptr_t)sp % 16 && !tried){
+        printf("> sp = %lx\n", sp);
         sp = sp_max;
+        tried = 1;
         goto try_again;
     }
     

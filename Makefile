@@ -10,6 +10,8 @@ CFLAGS 	+= -D_GNU_SOURCE -std=gnu99
 CFLAGS 	+= -static-libgcc -lgcc
 CFLAGS 	+= -I icrt/ -I code/
 CFLAGS 	+= -fno-common -fno-stack-protector -fomit-frame-pointer -fno-exceptions -fno-asynchronous-unwind-tables -fno-unwind-tables
+#CFLAGS  += -g -O0 # debug
+CFLAGS  += -s -O2 # release
 # CFLAGS  += -Wall -Werror -Wpedantic
 PORTABLE = -pie -fPIE -fno-builtin
 MACHINE  = $(shell uname -m)
@@ -41,7 +43,7 @@ arm: armv7l
 armhf: armv7l
 armv7: armv7l
 armv7l: clean
-	$(CC) $(CFLAGS) $(PORTABLE) -nostartfiles -o mandibule mandibule.c
+	$(CC) $(CFLAGS) $(PORTABLE) -nostartfiles -static -nostdlib -O0 -o mandibule mandibule.c idiv.c idiv.S
 	$(CC) $(CFLAGS) $(PORTABLE) -o toinject samples/toinject.c
 	$(CC) $(CFLAGS) -o target samples/target.c
 
