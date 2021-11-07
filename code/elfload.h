@@ -87,12 +87,12 @@ static inline int load_segment(uint8_t * elf, elf_ehdr * ehdr, elf_phdr * phdr, 
     return 0;
 }
 
+static inline int map_elf(char * path, unsigned long base_mod, unsigned long * auxv, unsigned long * out_eop);
+
 // load an elf in memory at specified base address
 // will load and run interpreter if any
-static inline int map_elf(char * path, unsigned long base_mod, unsigned long * auxv, unsigned long * out_eop)
+static inline int map_elf_from_buf(uint8_t* elf_buf, size_t elf_len, unsigned long base_mod, unsigned long * auxv, unsigned long * out_eop)
 {
-    uint8_t *       elf_buf = NULL;
-    size_t          elf_len = 0;
     unsigned long   base_off  = 0;
     unsigned long   base_next = 0;
     unsigned long   base_seg  = 0;
@@ -101,13 +101,6 @@ static inline int map_elf(char * path, unsigned long base_mod, unsigned long * a
     unsigned long   eop_ldr   = 0;
     elf_ehdr *      ehdr;
     elf_phdr *      phdr;
-
-    printf("> reading elf file '%s'\n", path);
-    if(read_file(path, &elf_buf, &elf_len))
-    {
-        printf("> read_file failed\n");
-        return -1;
-    }
 
     printf("> loading elf at: 0x%llx\n", base_mod);
     ehdr = (elf_ehdr *)elf_buf;
@@ -170,6 +163,31 @@ static inline int map_elf(char * path, unsigned long base_mod, unsigned long * a
     *out_eop = eop_ldr ? eop_ldr : eop_elf;
     printf("> eop 0x%llx\n", *out_eop);
     return 0;
+}
+
+// load an elf in memory at specified base address
+// will load and run interpreter if any
+static inline int map_elf(char * path, unsigned long base_mod, unsigned long * auxv, unsigned long * out_eop)
+{
+    uint8_t *       elf_buf = NULL;
+    size_t          elf_len = 0;
+    unsigned long   base_off  = 0;
+    unsigned long   base_next = 0;
+    unsigned long   base_seg  = 0;
+    unsigned long   base_intp = 0;
+    unsigned long   eop_elf   = 0;
+    unsigned long   eop_ldr   = 0;
+    elf_ehdr *      ehdr;
+    elf_phdr *      phdr;
+
+    printf("> reading elf file '%s'\n", path);
+    if(read_file(path, &elf_buf, &elf_len))
+    {
+        printf("> read_file failed\n");
+        return -1;
+    }
+
+    return map_elf_from_buf(elf_buf, elf_len, base_mod, auxv, out_eop);
 }
 
 

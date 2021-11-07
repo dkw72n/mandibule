@@ -94,7 +94,11 @@ int get_memmaps(int pid, uint8_t ** maps_buf, size_t * maps_len)
     // build /proc/pid/maps string
     memset(path, 0, sizeof(path));
     strlcat(path, "/proc/", sizeof(path));
-    strlcat(path, pids, sizeof(path));
+    if (pid == 0){
+        strlcat(path, "self", sizeof(path));
+    } else {
+        strlcat(path, pids, sizeof(path)); 
+    }
     strlcat(path, "/maps", sizeof(path));
 
     // read file
