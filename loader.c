@@ -86,13 +86,9 @@ void payload_loadelf(void* sp)
     unsigned long   eop;
     unsigned long   base_addr;
 
-    // autodetect binary mapping address?
-    base_addr = get_mapmax(0);
-    debug("mapping payload into memory at 0x%lx", base_addr);
-
     auxv_ptr = get_auxv_ptr(sp); 
     // load the elf into memory!
-    if(map_elf_from_buf(_payload, sizeof(_payload), base_addr, auxv_ptr, &eop) < 0)
+    if(map_elf_from_buf(_payload, sizeof(_payload), 0, auxv_ptr, &eop) < 0)
          error("> failed to load elf\n");
     
     // all done

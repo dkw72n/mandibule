@@ -59,19 +59,22 @@ static inline int load_segment(uint8_t * elf, elf_ehdr * ehdr, elf_phdr * phdr, 
     unsigned long seg_addr = phdr->p_vaddr + base_off;
     unsigned long seg_len  = phdr->p_memsz;
     unsigned long seg_off  = seg_addr & (PAGE_SIZE - 1);
+    unsigned long seg_max  = seg_addr + phdr->p_memsz;
+    unsigned long seg_min  = seg_addr;
     int prot = 0;
     long addr;
 
     // align segment
-    ALIGN_PAGE_UP(seg_len);
-
+    ALIGN_PAGE_UP(seg_max);
+    ALIGN_PAGE_DOWN(seg_min);
+    seg_len = seg_max - seg_min;
     // get memory at fixed addr
-    addr = (unsigned long)_mmap((void*)(seg_addr - seg_off), seg_len + seg_off, PROT_READ|PROT_WRITE, MAP_FIXED|MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
+    // addr = (unsigned long)_mmap((void*)(seg_addr - seg_off), seg_len + seg_off, PROT_READ|PROT_WRITE, MAP_FIXED|MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
 
     // all good?
-    printf("> load segment addr 0x%llx len 0x%llx => 0x%llx\n", seg_addr, seg_len, addr);
-    if(addr != seg_addr - seg_off)
-        return -1;
+    printf("> load segment addr 0x%llx len 0x%llx\n", seg_addr, seg_len);
+    // if(addr != seg_addr - seg_off)
+    //     return -1;
 
     // load up the segment with code/data
     memcpy((void*)seg_addr, elf + phdr->p_offset, phdr->p_filesz);
@@ -80,7 +83,7 @@ static inline int load_segment(uint8_t * elf, elf_ehdr * ehdr, elf_phdr * phdr, 
     if(phdr->p_flags & PF_R) prot |= PROT_READ;
     if(phdr->p_flags & PF_W) prot |= PROT_WRITE;
     if(phdr->p_flags & PF_X) prot |= PROT_EXEC;
-    if(_mprotect((void*)(seg_addr - seg_off), seg_len + seg_off, prot) < 0)
+    if(_mprotect((void*)(seg_min), seg_len, prot) < 0)
         return -1;
 
     // all good
@@ -99,11 +102,25 @@ static inline int map_elf_from_buf(uint8_t* elf_buf, size_t elf_len, unsigned lo
     unsigned long   base_intp = 0;
     unsigned long   eop_elf   = 0;
     unsigned long   eop_ldr   = 0;
+    unsigned long   max_off   = 0;
     elf_ehdr *      ehdr;
     elf_phdr *      phdr;
+    ehdr = (elf_ehdr *)elf_buf;
+
+    for (int i = 0; i < ehdr->e_phnum; ++i){
+        phdr = (elf_phdr *)(elf_buf + ehdr->e_phoff + i * ehdr->e_phentsize);
+        if(phdr->p_type == PT_LOAD){
+            unsigned long phdr_end = phdr->p_vaddr + phdr->p_memsz;
+            max_off = phdr_end > max_off ? phdr_end : max_off;
+        }
+    }
+    ALIGN_PAGE_UP(max_off);
+    printf("[-] max_off = 0x%llx\n", max_off);
+
+    base_mod = _mmap(base_mod, max_off, PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_PRIVATE, -1, 0);
 
     printf("> loading elf at: 0x%llx\n", base_mod);
-    ehdr = (elf_ehdr *)elf_buf;
+    
     if(ehdr->e_type == ET_DYN)
         base_off = base_mod;
 
@@ -114,8 +131,10 @@ static inline int map_elf_from_buf(uint8_t* elf_buf, size_t elf_len, unsigned lo
     {
         phdr = (elf_phdr *)(elf_buf + ehdr->e_phoff + i * ehdr->e_phentsize);
         // printf("> seg[%d] load: %d addr 0x%llx size 0x%llx\n", i, phdr->p_type == PT_LOAD, phdr->p_vaddr, phdr->p_memsz);
-        if(phdr->p_type == PT_LOAD && load_segment(elf_buf, ehdr, phdr, base_off))
+        if(phdr->p_type == PT_LOAD && load_segment(elf_buf, ehdr, phdr, base_off)){
+            printf("[-] failed to load segment at %llx\n", phdr->p_vaddr);
             return -1;
+        }
         if(!base_seg)
             base_seg = phdr->p_vaddr;
         base_next = phdr->p_vaddr + phdr->p_memsz > base_next ? phdr->p_vaddr + phdr->p_memsz : base_next;
